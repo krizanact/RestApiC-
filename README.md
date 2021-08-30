@@ -4,7 +4,7 @@ RestApi projekt koji omogućuje postavljanje i ažuiranje artikala novosti i vra
 
 
 ### Kako pokrenuti
-- Unutar git bash potrebno pokrenuti naredbu: git clone https://github.com/krizanact/RestApiC-/
+- Unutar git bash potrebno pokrenuti naredbu: git clone https://github.com/krizanact/RestApiC-.git
 - Kada se projekt klonira pokrenuti file ProjectApi.sln unutar Project.API foldera(npr. s Visual Studio ili VsCode)
 - Pokrentu Project.API projekt gdje ćemo dobiti index stranicu sa svim metodama i opisima metoda
 
