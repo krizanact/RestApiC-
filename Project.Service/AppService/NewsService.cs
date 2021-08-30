@@ -28,18 +28,18 @@ namespace Project.Service.AppService
 
 
         /// <summary>
-        /// Updates selected news data
+        /// Updates selected news data and returns edited object
         /// </summary>
         /// <param name="news"></param>
         /// <returns></returns>
-        Task EditNews(News news);
+        Task<News> EditNews(News news);
 
         /// <summary>
-        /// Adds news to database
+        /// Adds news to database and returns created object
         /// </summary>
         /// <param name="news"></param>
         /// <returns></returns>
-        Task CreateNews(News news);
+        Task<News> CreateNews(News news);
 
         /// <summary>
         /// Returns single news details by unique id
@@ -77,18 +77,22 @@ namespace Project.Service.AppService
             return await DbContext.News.Where(x => x.Id == id).AnyAsync();
         }
 
-        public async Task EditNews(News news)
+        public async Task<News> EditNews(News news)
         {
             news.UpdateDate = DateTime.Now;
             Update(news);
             await _unitOfWork.Commit();
+
+            return await GetNews(news.Id);
         }
 
-        public async Task CreateNews(News news)
+        public async Task<News> CreateNews(News news)
         {
             news.CreateDate = DateTime.Now;
             await Add(news);
             await _unitOfWork.Commit();
+
+            return await GetNews(news.Id);
         }
 
         public async Task<News> GetNews(int id)

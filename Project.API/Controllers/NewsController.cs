@@ -6,10 +6,7 @@ using Microsoft.AspNetCore.Mvc;
 using Project.Model.Core;
 using Project.Model.Model.JsonResponse;
 using Project.Model.Model.News;
-using Project.Model.Model.Token;
-using Project.Model.Model.User;
 using Project.Service.AppService;
-using Project.Service.ThirdParty;
 using Swashbuckle.AspNetCore.Annotations;
 using System;
 using System.Collections.Generic;
@@ -50,22 +47,15 @@ namespace Project.API.Controllers
         {
 
             // Check if ID is sent or if it doesn't exist
-            if (!await _newsService.CheckIfIdExist(id))
+            if (!await CheckIfIdExists(id))
             {
-                return BadRequest(new ErrorResponse()
-                {
-                    ErrorMessage = "Invalid ID!",
-                    Time = DateTime.Now.ToString()
-                });
+                return BadRequestResponse();
             }
 
             News news = await _newsService.GetNews(id);
 
             // Map News to NewsJson object
-            NewsJson newsJson = _mapper.Map<NewsJson>(news);
-            newsJson.UserCreated = news.User.Username;
-            // Get full path for image
-            newsJson.Image = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/{_imageConfig.Value.FolderName}/{news.Image}";
+            NewsJson newsJson = GetNewsJsonData(news);
 
             // Return news details
             return Ok(newsJson);
@@ -82,10 +72,7 @@ namespace Project.API.Controllers
             foreach(News item in news)
             {
                 // Map News to NewsJson object
-                NewsJson newsJson = _mapper.Map<NewsJson>(item);
-                newsJson.UserCreated = item.User.Username;
-                // Get full path for image
-                newsJson.Image = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/{_imageConfig.Value.FolderName}/{item.Image}";
+                NewsJson newsJson = GetNewsJsonData(item);
                 // Fill NewsJson list
                 newsList.Add(newsJson);
             }
@@ -96,7 +83,7 @@ namespace Project.API.Controllers
 
 
         [SwaggerOperation(Summary = "Creates new article(news)")]
-        [ProducesResponseType(typeof(SuccessResponse), 200)]
+        [ProducesResponseType(typeof(NewsJson), 201)]
         [HttpPost("CreateNews")]
         public async Task<IActionResult> CreateNews([FromForm] NewsInput newsInput)
         {
@@ -123,7 +110,7 @@ namespace Project.API.Controllers
             // Check if logged user is not authorized
             if (!IsUserAuthorized())
             {
-                NotAuthorizedResponse();
+                return NotAuthorizedResponse();
             }
 
             // Get logged user RoleId by using his ClaimTypes.Role value
@@ -150,37 +137,31 @@ namespace Project.API.Controllers
 
             // Upload image to server and return its unique name
             news.Image = await FileMethods.UploadImage(_webHost, newsInput.Image, _imageConfig.Value.FolderName);
-            // Create news in database
-            await _newsService.CreateNews(news);
+            // Create and return created news
+            news = await _newsService.CreateNews(news);
 
-            // Returns success message 
-            return Ok(new SuccessResponse()
-            {
-                SuccessMessage = "News successfully created!",
-                Time = DateTime.Now.ToString()
-            });
-          
+            // Map News object to our response object
+            NewsJson newsJson = GetNewsJsonData(news);
+
+            return Created("/api/news/getNews?id=" + news.Id, newsJson);
+
         }
 
         [SwaggerOperation(Summary = "Updates selected article(news)")]
-        [ProducesResponseType(typeof(SuccessResponse), 200)]
+        [ProducesResponseType(typeof(NewsJson), 200)]
         [HttpPut("EditNews")]
         public async Task<IActionResult> EditNews([FromForm] NewsInputEdit newsInput)
         {
             // Check if logged user is not authorized
             if (!IsUserAuthorized())
             {
-                NotAuthorizedResponse();
+                return NotAuthorizedResponse();
             }
 
             // Check if ID is sent or if it doesn't exist
-            if (!await _newsService.CheckIfIdExist(newsInput.Id))
+            if (!await CheckIfIdExists(newsInput.Id))
             {
-                return BadRequest(new ErrorResponse()
-                {
-                    ErrorMessage = "Invalid ID!",
-                    Time = DateTime.Now.ToString()
-                });
+                return BadRequestResponse();
             }
 
             // Get news
@@ -199,16 +180,13 @@ namespace Project.API.Controllers
                 news.Image = await FileMethods.UploadImage(_webHost, newsInput.Image, _imageConfig.Value.FolderName);
             }
 
-            // Update news object
-            await _newsService.EditNews(news);
+            // Update and returns news object
+            news = await _newsService.EditNews(news);
 
-            // Returns success message 
-            return Ok(new SuccessResponse()
-            {
-                SuccessMessage = "News successfully updated!",
-                Time = DateTime.Now.ToString()
-            });
+            // Map News to NewsJson object
+            NewsJson newsJson = GetNewsJsonData(news);
 
+            return Ok(newsJson);
         }
 
         [SwaggerOperation(Summary = "Removes selected article(news)")]
@@ -219,18 +197,15 @@ namespace Project.API.Controllers
             // Check if logged user is not authorized
             if (!IsUserAuthorized())
             {
-                NotAuthorizedResponse();
+                return NotAuthorizedResponse();
             }
 
             // Check if ID is sent or if it doesn't exist
-            if (!await _newsService.CheckIfIdExist(id))
+            if (!await CheckIfIdExists(id))
             {
-                return BadRequest(new ErrorResponse()
-                {
-                    ErrorMessage = "Invalid ID!",
-                    Time = DateTime.Now.ToString()
-                });
+                return BadRequestResponse();
             }
+
             News news = await _newsService.GetNews(id);
 
             // Delete image from directory if it exists
@@ -249,7 +224,52 @@ namespace Project.API.Controllers
             });
         }
 
-        #region Authorization check methods
+        #region private methods
+
+        /// <summary>
+        /// Returns NewsJson object by using News data
+        /// </summary>
+        /// <param name="news"></param>
+        /// <returns></returns>
+        private NewsJson GetNewsJsonData(News news)
+        {
+            // Map News object to our response object
+            NewsJson newsJson = _mapper.Map<NewsJson>(news);
+            newsJson.UserCreated = news.User.Username;
+            // Get full path for image
+            newsJson.Image = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}/{_imageConfig.Value.FolderName}/{news.Image}";
+
+            return newsJson;
+        }
+
+        /// <summary>
+        /// Checks if id has proper value and if it exists in database
+        /// </summary>
+        /// <param name="id"></param>
+        /// <returns></returns>
+        private async Task<bool> CheckIfIdExists(int id)
+        {
+            // Check if ID is sent or if it doesn't exist
+            if (id == 0 || !await _newsService.CheckIfIdExist(id))
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns bad request for invalid ID
+        /// </summary>
+        /// <returns></returns>
+        private IActionResult BadRequestResponse()
+        {
+            return BadRequest(new ErrorResponse()
+            {
+                ErrorMessage = "Invalid ID!",
+                Time = DateTime.Now.ToString()
+            });
+        }
 
         /// <summary>
         /// Returns false if logged user is not authorized for request
