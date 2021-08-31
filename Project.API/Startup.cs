@@ -16,7 +16,7 @@ using Project.Service.ThirdParty;
 using System;
 using System.Text;
 
-namespace Task.API
+namespace Project.API
 {
     public class Startup
     {
@@ -32,7 +32,7 @@ namespace Task.API
         {
 
             // Connection to database
-            services.AddDbContext<DataBaseConnection>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")), ServiceLifetime.Transient);
+            services.AddDbContext<DataBaseConnection>(x => x.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
 
             services.AddControllers();
             services.AddSwaggerGen(c =>

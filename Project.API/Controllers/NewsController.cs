@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Mediatorium.Model.Enum;
+using Project.Model.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
@@ -113,18 +113,6 @@ namespace Project.API.Controllers
                 return NotAuthorizedResponse();
             }
 
-            // Get logged user RoleId by using his ClaimTypes.Role value
-            string roleId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-            // If logged user is not admin return unauthorized request
-            if(roleId != null && Int32.Parse(roleId) != (int)RoleType.Admin)
-            {
-                return Unauthorized(new ErrorResponse()
-                {
-                    ErrorMessage = "Logged user is not authorized for this request!",
-                    Time = DateTime.Now.ToString()
-                });
-            }
-
             // Create News object and pass NewsInput data into it
             News news = new News();
             news.Title = newsInput.Title;
@@ -224,7 +212,7 @@ namespace Project.API.Controllers
             });
         }
 
-        #region private methods
+        #region private methods(for the code used multiple times)
 
         /// <summary>
         /// Returns NewsJson object by using News data
@@ -296,7 +284,7 @@ namespace Project.API.Controllers
         {
             return Unauthorized(new ErrorResponse()
             {
-                ErrorMessage = "Logged user is not authorized for this request!",
+                ErrorMessage = "Logged user is not authorized to execute this request!",
                 Time = DateTime.Now.ToString()
             });
         }

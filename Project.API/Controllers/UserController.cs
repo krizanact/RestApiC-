@@ -1,5 +1,5 @@
 ﻿using AutoMapper;
-using Mediatorium.Model.Enum;
+using Project.Model.Enum;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Project.Model.Core;
@@ -63,7 +63,7 @@ namespace Project.API.Controllers
             {
                 return Unauthorized(new ErrorResponse() 
                 { 
-                    ErrorMessage = "User is not authorized for executing this method",
+                    ErrorMessage = "User is not authorized to execute this method",
                     Time = DateTime.Now.ToString()
                 });
             }
@@ -93,7 +93,7 @@ namespace Project.API.Controllers
             {
                 return Unauthorized(new ErrorResponse()
                 {
-                    ErrorMessage = "User is not authorized for executing this method",
+                    ErrorMessage = "User is not authorized to execute this method",
                     Time = DateTime.Now.ToString()
                 });
             }

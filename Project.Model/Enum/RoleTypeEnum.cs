@@ -1,4 +1,4 @@
-﻿namespace Mediatorium.Model.Enum
+﻿namespace Project.Model.Enum
 {
     public enum RoleType
     {
