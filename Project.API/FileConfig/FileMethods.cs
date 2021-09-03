@@ -65,9 +65,7 @@ namespace Project.API.FileConfig
                       + Guid.NewGuid().ToString().Substring(0, 4)
                       + Path.GetExtension(fileName);
 
-            // Replace all problematic characters
-           
-
+            // Replace problematic characters
             byte[] tempBytes;
             tempBytes = System.Text.Encoding.GetEncoding("ISO-8859-1").GetBytes(uniqueFileName);
             uniqueFileName = System.Text.Encoding.UTF8.GetString(tempBytes).Replace("?","-");

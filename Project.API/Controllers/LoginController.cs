@@ -63,7 +63,7 @@ namespace Project.Api.Controllers
             {
                  new Claim(ClaimTypes.Name, user.Username),
                  new Claim(ClaimTypes.NameIdentifier, user.Id.ToString()),
-                 new Claim(ClaimTypes.Role, user.RoleId.ToString()),
+                 new Claim(ClaimTypes.Role, user.Role.Name),
             };
 
             // Generate token for this user

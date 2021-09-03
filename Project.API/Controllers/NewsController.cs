@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using Project.Model.Enum;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Project.Model.Core;
@@ -17,11 +15,12 @@ using Project.API.FileConfig;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.Extensions.Options;
 using Project.Model.Model.Configuration;
+using Project.Api.Helper;
+using Project.Model.RoleConfiguration;
 
 namespace Project.API.Controllers
 {
     [ApiController]
-    [Authorize]
     [Route("api/[controller]")]
     public class NewsController : ControllerBase
     {
@@ -39,7 +38,7 @@ namespace Project.API.Controllers
             _imageConfig = imageConfig;
         }
 
-
+        [AuthorizeRoles(Roles.Admin, Roles.DefaultUser)]
         [SwaggerOperation(Summary = "Returns details for selected news")]
         [ProducesResponseType(typeof(NewsJson), 200)]
         [HttpGet("GetNews")]
@@ -61,6 +60,7 @@ namespace Project.API.Controllers
             return Ok(newsJson);
         }
 
+        [AuthorizeRoles(Roles.Admin, Roles.DefaultUser)]
         [SwaggerOperation(Summary = "Returns list of news")]
         [ProducesResponseType(typeof(List<NewsJson>), 200)]
         [HttpGet("GetAllNews")]
@@ -82,6 +82,7 @@ namespace Project.API.Controllers
         }
 
 
+        [AuthorizeRoles(Roles.Admin)]
         [SwaggerOperation(Summary = "Creates new article(news)")]
         [ProducesResponseType(typeof(NewsJson), 201)]
         [HttpPost("CreateNews")]
@@ -107,12 +108,6 @@ namespace Project.API.Controllers
                 });
             }
 
-            // Check if logged user is not authorized
-            if (!IsUserAuthorized())
-            {
-                return NotAuthorizedResponse();
-            }
-
             // Create News object and pass NewsInput data into it
             News news = new News();
             news.Title = newsInput.Title;
@@ -135,16 +130,12 @@ namespace Project.API.Controllers
 
         }
 
+        [AuthorizeRoles(Roles.Admin)]
         [SwaggerOperation(Summary = "Updates selected article(news)")]
         [ProducesResponseType(typeof(NewsJson), 200)]
         [HttpPut("EditNews")]
         public async Task<IActionResult> EditNews([FromForm] NewsInputEdit newsInput)
         {
-            // Check if logged user is not authorized
-            if (!IsUserAuthorized())
-            {
-                return NotAuthorizedResponse();
-            }
 
             // Check if ID is sent or if it doesn't exist
             if (!await CheckIfIdExists(newsInput.Id))
@@ -177,16 +168,12 @@ namespace Project.API.Controllers
             return Ok(newsJson);
         }
 
+        [AuthorizeRoles(Roles.Admin)]
         [SwaggerOperation(Summary = "Removes selected article(news)")]
         [ProducesResponseType(typeof(SuccessResponse), 200)]
         [HttpDelete("DeleteNews")]
         public async Task<IActionResult> DeleteNews(int id)
         {
-            // Check if logged user is not authorized
-            if (!IsUserAuthorized())
-            {
-                return NotAuthorizedResponse();
-            }
 
             // Check if ID is sent or if it doesn't exist
             if (!await CheckIfIdExists(id))
@@ -255,36 +242,6 @@ namespace Project.API.Controllers
             return BadRequest(new ErrorResponse()
             {
                 ErrorMessage = "Invalid ID!",
-                Time = DateTime.Now.ToString()
-            });
-        }
-
-        /// <summary>
-        /// Returns false if logged user is not authorized for request
-        /// </summary>
-        /// <returns></returns>
-        private bool IsUserAuthorized()
-        {
-            // Get logged user RoleId by using his ClaimTypes.Role value
-            string roleId = User.Claims.FirstOrDefault(x => x.Type == ClaimTypes.NameIdentifier)?.Value;
-            // If logged user is not admin return unauthorized request
-            if (roleId != null && Int32.Parse(roleId) != (int)RoleType.Admin)
-            {
-                return false;
-            }
-
-            return true;
-        }
-
-        /// <summary>
-        /// Returns Unauthorized response
-        /// </summary>
-        /// <returns></returns>
-        private IActionResult NotAuthorizedResponse()
-        {
-            return Unauthorized(new ErrorResponse()
-            {
-                ErrorMessage = "Logged user is not authorized to execute this request!",
                 Time = DateTime.Now.ToString()
             });
         }

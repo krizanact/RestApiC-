@@ -1,6 +1,4 @@
 ﻿using AutoMapper;
-using Project.Model.Enum;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Project.Model.Core;
 using Project.Model.Model.JsonResponse;
@@ -11,11 +9,13 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using Project.Api.Helper;
+using Project.Model.RoleConfiguration;
 
 namespace Project.API.Controllers
 {
     [ApiController]
-    [Authorize]
+    [AuthorizeRoles(Roles.Admin)]
     [Route("api/[controller]")]
     public class UserController : ControllerBase
     {
@@ -56,18 +56,6 @@ namespace Project.API.Controllers
                 });
             }
 
-            // Get logged user and check his role
-            User logeedUser = await _userService.GetUser(User.Identity.Name);
-
-            if(logeedUser.RoleId != (int)RoleType.Admin)
-            {
-                return Unauthorized(new ErrorResponse() 
-                { 
-                    ErrorMessage = "User is not authorized to execute this method",
-                    Time = DateTime.Now.ToString()
-                });
-            }
-
             // Map UserInput data to User object
             User user = _mapper.Map<User>(userInput);
             // Create new user
@@ -86,17 +74,6 @@ namespace Project.API.Controllers
         [HttpGet("GetUsers")]
         public async Task<IActionResult> GetUsers()
         {
-            // Get logged user and check his role
-            User logeedUser = await _userService.GetUser(User.Identity.Name);
-
-            if (logeedUser.RoleId != (int)RoleType.Admin)
-            {
-                return Unauthorized(new ErrorResponse()
-                {
-                    ErrorMessage = "User is not authorized to execute this method",
-                    Time = DateTime.Now.ToString()
-                });
-            }
 
             List<User> users = await _userService.GetUsers();
 
