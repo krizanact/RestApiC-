@@ -1,6 +1,5 @@
 ﻿using System.Security.Cryptography;
 using System.Text;
-using System.Text.RegularExpressions;
 
 namespace Project.Service.Extension
 {
@@ -27,20 +26,6 @@ namespace Project.Service.Extension
 
             // Return hash value
             return result.ToString();
-        }
-
-
-        /// <summary>
-        /// Checks if string is valid email
-        /// </summary>
-        /// <param name="email"></param>
-        /// <returns></returns>
-        public static bool IsValidEmail(string email)
-        {
-            // source: http://thedailywtf.com/Articles/Validating_Email_Addresses.aspx
-            Regex rx = new Regex(
-            @"^[-!#$%&'*+/0-9=?A-Z^_a-z{|}~](\.?[-!#$%&'*+/0-9=?A-Z^_a-z{|}~])*@[a-zA-Z](-?[a-zA-Z0-9])*(\.[a-zA-Z](-?[a-zA-Z0-9])*)+$");
-            return rx.IsMatch(email);
         }
     }
 }
